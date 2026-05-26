@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Project dialogs and editor home complete
+- Prisma database foundation complete
 
 ## Current Goal
 
@@ -16,6 +16,7 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented feature spec 02: added the editor navbar, floating project sidebar shell with tabs and empty states, reusable editor dialog styling pattern, and a client editor shell mounted on the home page.
 - Implemented feature spec 03: installed `@clerk/ui`, wrapped the root layout in `ClerkProvider` with Clerk's dark theme and app CSS variables, added sign-in/sign-up catch-all pages, protected routes with root `proxy.ts`, redirected `/` by auth state, moved the editor shell to `/editor`, and added Clerk's default `UserButton` to the editor navbar.
 - Implemented feature spec 04: added the `/editor` home screen, mock owned/shared project data, create/rename/delete dialogs managed by a dedicated hook, sidebar project actions restricted to owned projects, live slug preview, and mobile sidebar backdrop dismissal.
+- Implemented feature spec 05: added Prisma `Project` and `ProjectCollaborator` models with project status, ownership, collaborator uniqueness, cascade delete, and required indexes; added the cached `lib/prisma.ts` singleton with Accelerate/direct Postgres branching; ran migrations and generated the Prisma client.
 
 ## In Progress
 
@@ -48,3 +49,6 @@ Update this file whenever the current phase, active feature, or implementation s
 - Started implementation of `context/feature-specs/03-auth.md` after reading the required project context, auth spec, Clerk setup skill, and local Next.js 16 proxy/redirect docs.
 - Installed `@clerk/ui` for Clerk's dark theme, added protected auth routing with root `proxy.ts`, created sign-in/sign-up pages, moved the editor shell to `/editor`, and added Clerk's default `UserButton` to the editor navbar.
 - Verified feature spec 03 with `npm run lint` and `npm run build`; the build required network access so Next.js could fetch Geist font CSS.
+- Started implementation of `context/feature-specs/05-prisma.md` after reading the required project context files and the local Next.js Server/Client Components docs.
+- Added Prisma schema models under `prisma/models/project.prisma`, generated migrations `20260526005632_init` and `20260526005845_add_project_details`, and generated the client to `app/generated/prisma`.
+- Verified feature spec 05 with `npx prisma validate`, `npx prisma generate`, `npm run lint`, and `npm run build`.
