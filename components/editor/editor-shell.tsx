@@ -6,11 +6,20 @@ import { EditorHome } from "@/components/editor/editor-home";
 import { EditorNavbar } from "@/components/editor/editor-navbar";
 import { ProjectSidebar } from "@/components/editor/project-sidebar";
 import { ProjectDialogs } from "@/components/editor/project-dialogs";
-import { useProjectDialogs } from "@/components/editor/use-project-dialogs";
+import { useProjectActions } from "@/hooks/use-project-actions";
+import { type EditorProjectLists } from "@/lib/projects";
 
-export function EditorShell() {
+interface EditorShellProps extends EditorProjectLists {
+  activeProjectId?: string;
+}
+
+export function EditorShell({
+  activeProjectId,
+  ownedProjects,
+  sharedProjects,
+}: EditorShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const projectDialogs = useProjectDialogs();
+  const projectActions = useProjectActions();
 
   return (
     <div className="flex min-h-screen flex-col overflow-hidden bg-base text-copy-primary">
@@ -20,27 +29,29 @@ export function EditorShell() {
       />
       <main className="relative min-h-0 flex-1 bg-base">
         <ProjectSidebar
+          activeProjectId={activeProjectId}
           isOpen={isSidebarOpen}
-          projects={projectDialogs.projects}
+          ownedProjects={ownedProjects}
+          sharedProjects={sharedProjects}
           onClose={() => setIsSidebarOpen(false)}
-          onCreateProject={projectDialogs.openCreateDialog}
-          onDeleteProject={projectDialogs.openDeleteDialog}
-          onRenameProject={projectDialogs.openRenameDialog}
+          onCreateProject={projectActions.openCreateDialog}
+          onDeleteProject={projectActions.openDeleteDialog}
+          onRenameProject={projectActions.openRenameDialog}
         />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border-default)_1px,transparent_1px),linear-gradient(to_bottom,var(--border-default)_1px,transparent_1px)] bg-[size:48px_48px] opacity-20" />
-        <EditorHome onCreateProject={projectDialogs.openCreateDialog} />
+        <EditorHome onCreateProject={projectActions.openCreateDialog} />
       </main>
       <ProjectDialogs
-        activeProject={projectDialogs.activeProject}
-        dialogMode={projectDialogs.dialogMode}
-        isLoading={projectDialogs.isLoading}
-        projectName={projectDialogs.projectName}
-        slugPreview={projectDialogs.slugPreview}
-        onClose={projectDialogs.closeDialog}
-        onCreateSubmit={projectDialogs.submitCreateProject}
-        onDeleteConfirm={projectDialogs.submitDeleteProject}
-        onProjectNameChange={projectDialogs.setProjectName}
-        onRenameSubmit={projectDialogs.submitRenameProject}
+        activeProject={projectActions.activeProject}
+        dialogMode={projectActions.dialogMode}
+        isLoading={projectActions.isLoading}
+        projectName={projectActions.projectName}
+        roomIdPreview={projectActions.roomIdPreview}
+        onClose={projectActions.closeDialog}
+        onCreateSubmit={projectActions.submitCreateProject}
+        onDeleteConfirm={projectActions.submitDeleteProject}
+        onProjectNameChange={projectActions.setProjectName}
+        onRenameSubmit={projectActions.submitRenameProject}
       />
     </div>
   );

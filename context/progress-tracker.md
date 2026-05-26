@@ -4,7 +4,7 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Current Phase
 
-- Prisma database foundation complete
+- Editor home project API wiring complete
 
 ## Current Goal
 
@@ -17,6 +17,8 @@ Update this file whenever the current phase, active feature, or implementation s
 - Implemented feature spec 03: installed `@clerk/ui`, wrapped the root layout in `ClerkProvider` with Clerk's dark theme and app CSS variables, added sign-in/sign-up catch-all pages, protected routes with root `proxy.ts`, redirected `/` by auth state, moved the editor shell to `/editor`, and added Clerk's default `UserButton` to the editor navbar.
 - Implemented feature spec 04: added the `/editor` home screen, mock owned/shared project data, create/rename/delete dialogs managed by a dedicated hook, sidebar project actions restricted to owned projects, live slug preview, and mobile sidebar backdrop dismissal.
 - Implemented feature spec 05: added Prisma `Project` and `ProjectCollaborator` models with project status, ownership, collaborator uniqueness, cascade delete, and required indexes; added the cached `lib/prisma.ts` singleton with Accelerate/direct Postgres branching; ran migrations and generated the Prisma client.
+- Implemented feature spec 06: added authenticated REST project APIs for list/create and owner-only rename/delete, using Clerk user IDs as project owners, Prisma persistence, request body validation, default project names, and explicit `401`/`403` JSON responses.
+- Implemented feature spec 07: wired the editor home and sidebar to server-loaded project data, added a real project action hook for create/rename/delete API mutations, introduced `/editor/[projectId]` workspace URLs, aligned created project IDs with room IDs, and removed the mock project state.
 
 ## In Progress
 
@@ -32,10 +34,20 @@ Update this file whenever the current phase, active feature, or implementation s
 
 ## Architecture Decisions
 
-- Add decisions that affect the system design or data model.
+- Project IDs created from the editor are validated slug-style room IDs so the Prisma project ID and Liveblocks room ID stay aligned.
 
 ## Session Notes
 
+- Started implementation of `context/feature-specs/07-wire-editor-home.md` after reading the required project context files and local Next.js 16 Server/Client Components, data fetching, and `useRouter` docs.
+- Added a server-side editor project list helper that loads owned projects by Clerk user ID and shared projects by collaborator email, mapping project IDs directly to Liveblocks room IDs for the sidebar.
+- Updated project creation to accept a validated slug-style project ID so newly created project IDs can stay aligned with Liveblocks room IDs.
+- Added the real project action hook under `hooks/`, with create, rename, and delete mutations calling the project REST API and navigating or refreshing through the App Router.
+- Wired the editor pages, sidebar, and dialogs to server-loaded owned/shared project lists, with `/editor/[projectId]` as the workspace URL and room ID preview shown in the create dialog.
+- Removed the old mock project dialog hook now that project state comes from the server and mutations go through the API.
+- Verified feature spec 07 with `npm run lint` and `npm run build`.
+- Started implementation of `context/feature-specs/06-project-apis.md` after reading the required project context files, the feature spec, local Next.js 16 Route Handler docs, and Clerk API route auth guidance.
+- Added backend-only project REST routes for authenticated list/create and owner-only rename/delete, with JSON body validation and 401/403 responses.
+- Verified feature spec 06 with `npm run lint` and `npm run build`.
 - Started implementation of `context/feature-specs/04-project-dialogs.md` after reading the required project context files and local Next.js docs.
 - Verified feature spec 04 with `npm run lint` and `npm run build`.
 - Adjusted the editor home content to vertically center within the canvas area and increased description contrast with the secondary text token.
