@@ -42,14 +42,17 @@ export function useProjectActions() {
   const router = useRouter();
   const pathname = usePathname();
   const [dialogMode, setDialogMode] = useState<ProjectDialogMode | null>(null);
-  const [activeProject, setActiveProject] = useState<EditorProject | null>(null);
+  const [activeProject, setActiveProject] = useState<EditorProject | null>(
+    null,
+  );
   const [projectName, setProjectName] = useState("");
   const [createSuffix, setCreateSuffix] = useState(createShortSuffix);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const roomIdPreview = useMemo(
     () => `${slugify(projectName)}-${createSuffix}`,
-    [createSuffix, projectName]
+    [createSuffix, projectName],
   );
 
   function closeDialog() {
@@ -57,6 +60,11 @@ export function useProjectActions() {
     setActiveProject(null);
     setProjectName("");
     setIsLoading(false);
+    setError(null);
+  }
+
+  function clearError() {
+    setError(null);
   }
 
   function openCreateDialog() {
@@ -110,6 +118,7 @@ export function useProjectActions() {
       router.push(`/editor/${projectId}`);
     } catch (error) {
       console.error(error);
+      setError(error instanceof Error ? error : new Error(String(error)));
       setIsLoading(false);
     }
   }
@@ -142,6 +151,7 @@ export function useProjectActions() {
       router.refresh();
     } catch (error) {
       console.error(error);
+      setError(error instanceof Error ? error : new Error(String(error)));
       setIsLoading(false);
     }
   }
@@ -162,7 +172,8 @@ export function useProjectActions() {
         throw new Error("Project delete failed.");
       }
 
-      const isDeletingActiveWorkspace = pathname === `/editor/${activeProject.id}`;
+      const isDeletingActiveWorkspace =
+        pathname === `/editor/${activeProject.id}`;
 
       closeDialog();
 
@@ -173,20 +184,23 @@ export function useProjectActions() {
       }
     } catch (error) {
       console.error(error);
+      setError(error instanceof Error ? error : new Error(String(error)));
       setIsLoading(false);
     }
   }
 
   return {
     activeProject,
-    dialogMode,
-    isLoading,
-    projectName,
-    roomIdPreview,
+    clearError,
     closeDialog,
+    dialogMode,
+    error,
+    isLoading,
     openCreateDialog,
     openDeleteDialog,
     openRenameDialog,
+    projectName,
+    roomIdPreview,
     setProjectName,
     submitCreateProject,
     submitDeleteProject,
