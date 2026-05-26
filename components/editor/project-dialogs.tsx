@@ -4,17 +4,17 @@ import { type FormEvent } from "react";
 import { Trash2 } from "lucide-react";
 
 import { EditorDialogPattern } from "@/components/editor/editor-dialog-pattern";
-import { type MockProject } from "@/components/editor/use-project-dialogs";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { type EditorProject } from "@/lib/projects";
 
 interface ProjectDialogsProps {
-  activeProject: MockProject | null;
+  activeProject: EditorProject | null;
   dialogMode: "create" | "rename" | "delete" | null;
   isLoading: boolean;
   projectName: string;
-  slugPreview: string;
+  roomIdPreview: string;
   onClose: () => void;
   onProjectNameChange: (value: string) => void;
   onCreateSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -30,7 +30,7 @@ export function ProjectDialogs({
   dialogMode,
   isLoading,
   projectName,
-  slugPreview,
+  roomIdPreview,
   onClose,
   onProjectNameChange,
   onCreateSubmit,
@@ -77,9 +77,9 @@ export function ProjectDialogs({
             </div>
             <div className="rounded-xl border border-surface-border bg-subtle px-3 py-2">
               <p className="text-xs uppercase tracking-normal text-copy-faint">
-                Slug preview
+                Room ID preview
               </p>
-              <p className="mt-1 font-mono text-sm text-brand">{slugPreview}</p>
+              <p className="mt-1 font-mono text-sm text-brand">{roomIdPreview}</p>
             </div>
           </form>
         </EditorDialogPattern>
@@ -125,7 +125,7 @@ export function ProjectDialogs({
       <Dialog open={dialogMode === "delete"} onOpenChange={(open) => !open && onClose()}>
         <EditorDialogPattern
           title="Delete Project"
-          description={`This will remove ${activeProject?.name ?? "this project"} from the mock project list.`}
+          description={`This will permanently remove ${activeProject?.name ?? "this project"}.`}
           footerActions={
             <>
               <Button type="button" variant="outline" onClick={onClose}>
