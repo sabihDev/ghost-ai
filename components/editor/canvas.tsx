@@ -131,9 +131,9 @@ function CanvasFlow() {
       >
         <Background
           variant={BackgroundVariant.Dots}
-          color="#2a2a30"
-          gap={48}
-          size={1}
+          color="#555566"
+          gap={32}
+          size={2}
         />
         <MiniMap
           style={{ background: "#111114", color: "#f0f0f4" }}
