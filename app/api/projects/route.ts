@@ -1,3 +1,5 @@
+import type { Prisma } from "@/app/generated/prisma/client";
+
 import prisma from "@/lib/prisma";
 import {
   getAuthenticatedUser,
@@ -5,24 +7,58 @@ import {
   parseOptionalProjectName,
   readJsonObject,
 } from "@/lib/api/projects";
+import { getCurrentClerkIdentity } from "@/lib/project-access";
 
 export async function GET(): Promise<Response> {
-  const user = await getAuthenticatedUser();
+  const identity = await getCurrentClerkIdentity();
 
-  if (user instanceof Response) {
-    return user;
+  if (!identity) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const projects = await prisma.project.findMany({
-    where: {
-      ownerId: user.userId,
+  const sharedEmails = identity.emails;
+  const sharedProjectFilters: Prisma.ProjectWhereInput[] = [
+    {
+      ownerId: identity.userId,
+      collaborators: {
+        some: {},
+      },
     },
-    orderBy: {
-      updatedAt: "desc",
-    },
-  });
+  ];
 
-  return Response.json({ projects });
+  if (sharedEmails.length > 0) {
+    sharedProjectFilters.push({
+      ownerId: { not: identity.userId },
+      collaborators: {
+        some: {
+          email: {
+            in: sharedEmails,
+          },
+        },
+      },
+    });
+  }
+
+  const [ownedProjects, sharedProjects] = await Promise.all([
+    prisma.project.findMany({
+      where: {
+        ownerId: identity.userId,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    }),
+    prisma.project.findMany({
+      where: {
+        OR: sharedProjectFilters,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+    }),
+  ]);
+
+  return Response.json({ ownedProjects, sharedProjects });
 }
 
 export async function POST(request: Request): Promise<Response> {

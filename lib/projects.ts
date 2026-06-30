@@ -1,6 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
+import type { Prisma } from "@/app/generated/prisma/client";
 
 import prisma from "@/lib/prisma";
+import { getCurrentClerkIdentity } from "@/lib/project-access";
 
 export type ProjectAccess = "owned" | "shared";
 
@@ -17,27 +18,11 @@ export interface EditorProjectLists {
   sharedProjects: EditorProject[];
 }
 
-interface EmailClaims {
-  email?: unknown;
-  primary_email_address?: unknown;
-}
-
-function getClaimEmail(sessionClaims: unknown): string | null {
-  if (!sessionClaims || typeof sessionClaims !== "object") {
-    return null;
-  }
-
-  const claims = sessionClaims as EmailClaims;
-
-  if (typeof claims.email === "string") {
-    return claims.email;
-  }
-
-  if (typeof claims.primary_email_address === "string") {
-    return claims.primary_email_address;
-  }
-
-  return null;
+interface ProjectListRecord {
+  id: string;
+  name: string;
+  ownerId: string;
+  updatedAt: Date;
 }
 
 function formatUpdatedAt(updatedAt: Date): string {
@@ -62,21 +47,44 @@ function toEditorProject(
 }
 
 export async function getEditorProjectLists(): Promise<EditorProjectLists> {
-  const { userId, sessionClaims } = await auth();
+  const identity = await getCurrentClerkIdentity();
 
-  if (!userId) {
+  if (!identity) {
     return {
       ownedProjects: [],
       sharedProjects: [],
     };
   }
 
-  const sharedEmail = getClaimEmail(sessionClaims);
+  const sharedEmails = identity.emails;
+  const sharedProjectFilters: Prisma.ProjectWhereInput[] = [
+    {
+      ownerId: identity.userId,
+      collaborators: {
+        some: {},
+      },
+    },
+  ];
+
+  if (sharedEmails.length > 0) {
+    sharedProjectFilters.push({
+      ownerId: {
+        not: identity.userId,
+      },
+      collaborators: {
+        some: {
+          email: {
+            in: sharedEmails,
+          },
+        },
+      },
+    });
+  }
 
   const [ownedProjects, sharedProjects] = await Promise.all([
     prisma.project.findMany({
       where: {
-        ownerId: userId,
+        ownerId: identity.userId,
       },
       orderBy: {
         updatedAt: "desc",
@@ -84,39 +92,35 @@ export async function getEditorProjectLists(): Promise<EditorProjectLists> {
       select: {
         id: true,
         name: true,
+        ownerId: true,
         updatedAt: true,
       },
     }),
-    sharedEmail
-      ? prisma.project.findMany({
-          where: {
-            ownerId: {
-              not: userId,
-            },
-            collaborators: {
-              some: {
-                email: sharedEmail,
-              },
-            },
-          },
-          orderBy: {
-            updatedAt: "desc",
-          },
-          select: {
-            id: true,
-            name: true,
-            updatedAt: true,
-          },
-        })
-      : Promise.resolve([]),
+    prisma.project.findMany({
+      where: {
+        OR: sharedProjectFilters,
+      },
+      orderBy: {
+        updatedAt: "desc",
+      },
+      select: {
+        id: true,
+        name: true,
+        ownerId: true,
+        updatedAt: true,
+      },
+    }),
   ]);
 
   return {
     ownedProjects: ownedProjects.map((project) =>
       toEditorProject(project, "owned")
     ),
-    sharedProjects: sharedProjects.map((project) =>
-      toEditorProject(project, "shared")
+    sharedProjects: sharedProjects.map((project: ProjectListRecord) =>
+      toEditorProject(
+        project,
+        project.ownerId === identity.userId ? "owned" : "shared"
+      )
     ),
   };
 }
