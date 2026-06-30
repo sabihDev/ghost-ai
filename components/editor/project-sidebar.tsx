@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Pencil, Plus, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Trash2, Users, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +17,7 @@ interface ProjectSidebarProps {
   onCreateProject: () => void;
   onDeleteProject: (project: EditorProject) => void;
   onRenameProject: (project: EditorProject) => void;
+  onShareProject: (project: EditorProject) => void;
   className?: string;
 }
 
@@ -26,6 +27,7 @@ interface ProjectListProps {
   projects: EditorProject[];
   onDeleteProject: (project: EditorProject) => void;
   onRenameProject: (project: EditorProject) => void;
+  onShareProject: (project: EditorProject) => void;
 }
 
 function EmptyProjectsState({ label }: { label: string }) {
@@ -42,6 +44,7 @@ function ProjectList({
   projects,
   onDeleteProject,
   onRenameProject,
+  onShareProject,
 }: ProjectListProps) {
   if (projects.length === 0) {
     return <EmptyProjectsState label={emptyLabel} />;
@@ -83,6 +86,15 @@ function ProjectList({
                   type="button"
                   variant="ghost"
                   size="icon-sm"
+                  aria-label={`Manage access for ${project.name}`}
+                  onClick={() => onShareProject(project)}
+                >
+                  <Users className="h-4 w-4" aria-hidden="true" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
                   aria-label={`Rename ${project.name}`}
                   onClick={() => onRenameProject(project)}
                 >
@@ -98,7 +110,17 @@ function ProjectList({
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
-            ) : null}
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`View access for ${project.name}`}
+                onClick={() => onShareProject(project)}
+              >
+                <Users className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            )}
           </div>
         );
       })}
@@ -115,6 +137,7 @@ export function ProjectSidebar({
   onCreateProject,
   onDeleteProject,
   onRenameProject,
+  onShareProject,
   className,
 }: ProjectSidebarProps) {
   return (
@@ -151,8 +174,18 @@ export function ProjectSidebar({
 
         <Tabs defaultValue="my-projects" className="mt-4 min-h-0 flex-1">
           <TabsList className="grid w-full grid-cols-2 bg-subtle">
-            <TabsTrigger value="my-projects">My Projects</TabsTrigger>
-            <TabsTrigger value="shared">Shared</TabsTrigger>
+            <TabsTrigger value="my-projects">
+              My Projects
+              <span className="font-mono text-xs text-copy-muted">
+                {ownedProjects.length}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="shared">
+              Shared
+              <span className="font-mono text-xs text-copy-muted">
+                {sharedProjects.length}
+              </span>
+            </TabsTrigger>
           </TabsList>
           <TabsContent
             value="my-projects"
@@ -164,6 +197,7 @@ export function ProjectSidebar({
               projects={ownedProjects}
               onDeleteProject={onDeleteProject}
               onRenameProject={onRenameProject}
+              onShareProject={onShareProject}
             />
           </TabsContent>
           <TabsContent
@@ -176,6 +210,7 @@ export function ProjectSidebar({
               projects={sharedProjects}
               onDeleteProject={onDeleteProject}
               onRenameProject={onRenameProject}
+              onShareProject={onShareProject}
             />
           </TabsContent>
         </Tabs>

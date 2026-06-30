@@ -4,5 +4,5 @@ import { redirect } from "next/navigation";
 export default async function Home() {
   const { userId } = await auth();
 
-  redirect(userId ? "/editor" : "/sign-in");
+  redirect(userId ? "/editor" : "/sign-up");
 }
